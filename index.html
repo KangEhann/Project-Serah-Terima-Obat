@@ -347,11 +347,13 @@
 
 <div class="toast" id="toast"></div>
 
-<script>
-const SUPABASE_URL = 'https://YOUR_URL.supabase.co';
-const SUPABASE_KEY = 'YOUR_ANON_KEY';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script>
+const SUPABASE_URL = 'https://wgxtnhgjrkgigyqhnlwy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_n0kPR_vBbvXqRP70WcwpKw__8rX6tq7';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let photoFile = null;
 
 function getShift() {
