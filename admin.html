@@ -146,7 +146,7 @@
 
   <div class="stats-grid">
     <div class="stat-card purple"><div class="stat-label">Total Catatan</div><div class="stat-num" id="statTotal">—</div><div class="stat-sub">semua shift</div></div>
-    <div class="stat-card cyan"><div class="stat-label">Pasien Unik</div><div class="stat-num" id="statPasien">—</div><div class="stat-sub">berdasarkan URN</div></div>
+    <div class="stat-card cyan"><div class="stat-label">Pasien</div><div class="stat-num" id="statPasien">—</div><div class="stat-sub">Data</div></div>
     <div class="stat-card rose"><div class="stat-label">Shift Pagi</div><div class="stat-num" id="statPagi">—</div><div class="stat-sub">07:00 – 14:00</div></div>
     <div class="stat-card green"><div class="stat-label">Shift Malam</div><div class="stat-num" id="statMalam">—</div><div class="stat-sub">21:00 – 07:00</div></div>
   </div>
@@ -365,7 +365,7 @@ async function exportExcel() {
   const ws2 = XLSX.utils.aoa_to_sheet([
     ['LAPORAN SERAH TERIMA OBAT'],['Dicetak:', new Date().toLocaleString('id-ID')],[''],
     ['Total Catatan', filteredData.length],
-    ['Pasien Unik', new Set(filteredData.map(d=>d.urn_pasien)).size],
+    ['Pasien ', new Set(filteredData.map(d=>d.urn_pasien)).size],
     ['Shift Pagi', filteredData.filter(d=>d.shift==='pagi').length],
     ['Shift Siang', filteredData.filter(d=>d.shift==='siang').length],
     ['Shift Malam', filteredData.filter(d=>d.shift==='malam').length],
