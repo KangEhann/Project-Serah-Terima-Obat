@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard — HandOver</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
@@ -208,7 +208,6 @@ const SUPABASE_URL = 'https://wgxtnhgjrkgigyqhnlwy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_n0kPR_vBbvXqRP70WcwpKw__8rX6tq7';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-</script>
 
 let allData = [], filteredData = [], currentShift = '';
 let sortCol = 'timestamp', sortDir = 'desc';
