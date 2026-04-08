@@ -2,56 +2,58 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Admin Serah Terima Obat</title>
+<title>Admin Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
-body{font-family:sans-serif;background:#f5f5f5;padding:20px;}
-h2{margin-bottom:10px;}
-.container{background:white;padding:20px;border-radius:10px;}
-
-input,select,button{
-margin:5px;
-padding:8px;
-border-radius:6px;
-border:1px solid #ccc;
+body{
+  font-family:'Segoe UI';
+  background:#1e1e2f;
+  color:white;
+  padding:20px;
 }
 
-button{
-background:#667eea;
-color:white;
-border:none;
-cursor:pointer;
+.container{
+  background:#2a2a40;
+  padding:20px;
+  border-radius:12px;
 }
 
-table{width:100%;border-collapse:collapse;margin-top:15px;}
-th,td{padding:8px;border:1px solid #ddd;text-align:left;}
-img{width:60px;border-radius:5px;}
+h2{margin-bottom:5px;}
+
+#clock{
+  margin-bottom:15px;
+  color:#bbb;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  background:#5c6bc0;
+}
+
+th,td{
+  padding:10px;
+  border:1px solid #444;
+}
+
+tr:nth-child(even){
+  background:#25253a;
+}
+
+img{width:60px;border-radius:6px;}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-<h2>📊 Admin Serah Terima Obat</h2>
-
-<!-- FILTER -->
-<input type="date" id="startDate">
-<input type="date" id="endDate">
-
-<select id="filterShift">
-<option value="">Semua Shift</option>
-<option value="pagi">Pagi</option>
-<option value="siang">Siang</option>
-<option value="malam">Malam</option>
-</select>
-
-<input type="text" id="search" placeholder="Cari pasien...">
-
-<button onclick="loadData()">🔍 Filter</button>
-<button onclick="downloadExcel()">⬇ Download Excel</button>
+<h2>📊 Admin Serah Terima</h2>
+<div id="clock"></div>
 
 <table>
 <thead>
@@ -68,6 +70,7 @@ img{width:60px;border-radius:5px;}
 <th>Foto</th>
 </tr>
 </thead>
+
 <tbody id="data"></tbody>
 </table>
 </div>
@@ -75,51 +78,34 @@ img{width:60px;border-radius:5px;}
 <script>
 const supabase = window.supabase.createClient(
   'https://wgxtnhgjrkgigyqhnlwy.supabase.co',
-  'PASTE_PUBLISHABLE_KEY_DISINI'
+  'sb_publishable_xxxxx'
 );
 
-let globalData = [];
+function updateClock(){
+  clock.innerText=new Date().toLocaleString();
+}
+setInterval(updateClock,1000);
+updateClock();
 
 async function loadData(){
-  const { data, error } = await supabase
-    .from('handover_data')
-    .select('*')
-    .order('timestamp', { ascending: false });
+  const {data,error}=await supabase
+  .from('handover_data')
+  .select('*')
+  .order('timestamp',{ascending:false});
 
-  if(error){ alert(error.message); return; }
+  if(error){alert(error.message);return;}
 
-  let start = startDate.value;
-  let end = endDate.value;
-  let shift = filterShift.value;
-  let searchVal = search.value.toLowerCase();
-
-  globalData = data.filter(d=>{
-    let t = new Date(d.timestamp);
-
-    if(start && new Date(start) > t) return false;
-    if(end && new Date(end + " 23:59") < t) return false;
-    if(shift && d.shift !== shift) return false;
-    if(searchVal && !d.nama_pasien.toLowerCase().includes(searchVal)) return false;
-
-    return true;
-  });
-
-  renderTable(globalData);
-}
-
-function renderTable(data){
-  let html = "";
+  let html="";
 
   data.forEach((d,i)=>{
-    let images = "";
-
+    let imgs="";
     if(d.foto_url){
-      d.foto_url.split(",").forEach(url=>{
-        images += `<img src="${url}">`;
+      d.foto_url.split(",").forEach(u=>{
+        imgs+=`<img src="${u}">`;
       });
     }
 
-    html += `
+    html+=`
     <tr>
       <td>${i+1}</td>
       <td>${new Date(d.timestamp).toLocaleString()}</td>
@@ -130,37 +116,17 @@ function renderTable(data){
       <td>${d.urn_pasien}</td>
       <td>${d.lantai}</td>
       <td>${d.nama_obat}</td>
-      <td>${images}</td>
+      <td>${imgs}</td>
     </tr>`;
   });
 
-  document.getElementById('data').innerHTML = html;
+  document.getElementById('data').innerHTML=html;
 }
 
-function downloadExcel(){
-  let rows = [];
-
-  globalData.forEach((d,i)=>{
-    rows.push({
-      No: i+1,
-      Waktu: new Date(d.timestamp).toLocaleString(),
-      Shift: d.shift,
-      Pengirim: d.pengirim,
-      Penerima: d.penerima,
-      Pasien: d.nama_pasien,
-      URN: d.urn_pasien,
-      Lantai: d.lantai,
-      Obat: d.nama_obat,
-      Foto: d.foto_url
-    });
-  });
-
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Data");
-
-  XLSX.writeFile(wb, "Serah_Terima.xlsx");
-}
+/* REALTIME */
+supabase.channel('realtime')
+.on('postgres_changes',{event:'*',schema:'public',table:'handover_data'},loadData)
+.subscribe();
 
 loadData();
 </script>
