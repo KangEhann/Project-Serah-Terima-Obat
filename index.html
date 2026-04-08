@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Form Serah Terima</title>
+<title>Form Serah Terima Obat</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
@@ -18,7 +18,7 @@ img{width:100px;margin:5px;border-radius:8px;}
 
 <body>
 <div class="container">
-<h2>📋 Form Serah Terima</h2>
+<h2>📋 Form Serah Terima Obat</h2>
 
 <input id="pengirim" placeholder="Nama Pengirim" required>
 <input id="penerima" placeholder="Nama Penerima" required>
@@ -26,11 +26,52 @@ img{width:100px;margin:5px;border-radius:8px;}
 <input id="namaPasien" placeholder="Nama Pasien" required>
 <input id="urnPasien" placeholder="URN Pasien" required>
 
-<select id="lantai">
-<option value="">Pilih Lantai</option>
-<option>ICU</option>
-<option>HCU</option>
-<option>Ward</option>
+<select id="lantai" required>
+<option value="">-- Pilih Lantai Rawat Inap --</option>
+
+<optgroup label="Lantai 9">
+<option value="9 General Ward">9 General Ward</option>
+<option value="9 Obstetry Ward">9 Obstetry Ward</option>
+<option value="9 General C">9 General C</option>
+</optgroup>
+
+<optgroup label="Lantai 10">
+<option value="10 Pediatric Ward">10 Pediatric Ward</option>
+</optgroup>
+
+<optgroup label="Lantai 11">
+<option value="11 BMT">11 BMT</option>
+<option value="11 General Ward">11 General Ward</option>
+</optgroup>
+
+<optgroup label="Lantai 12">
+<option value="12 Paliatif Ward">12 Paliatif Ward</option>
+</optgroup>
+
+<optgroup label="Lantai 16">
+<option value="16 General Ward">16 General Ward</option>
+</optgroup>
+
+<optgroup label="Lantai 19">
+<option value="19 General Ward Wing A">19 General Ward Wing A</option>
+<option value="19 General Ward Wing B">19 General Ward Wing B</option>
+</optgroup>
+
+<optgroup label="Lantai 20">
+<option value="20 General Ward Wing A">20 General Ward Wing A</option>
+<option value="20 General Ward Wing B">20 General Ward Wing B</option>
+</optgroup>
+
+<optgroup label="Lantai 22">
+<option value="22 General Ward Wing A">22 General Ward Wing A</option>
+<option value="22 General Ward Wing B">22 General Ward Wing B</option>
+</optgroup>
+
+<optgroup label="Khusus">
+<option value="ICU">ICU</option>
+<option value="HCU">HCU</option>
+</optgroup>
+
 </select>
 
 <textarea id="namaObat" placeholder="Nama Obat"></textarea>
@@ -43,13 +84,13 @@ img{width:100px;margin:5px;border-radius:8px;}
 
 <script>
 const supabase = window.supabase.createClient(
-  'https://YOUR_URL.supabase.co',
-  'YOUR_ANON_KEY'
+  'https://wgxtnhgjrkgigyqhnlwy.supabase.co',
+   'sb_publishable_XXXX'
 );
 
 let files = [];
 
-document.getElementById('photoInput').onchange = e=>{
+photoInput.onchange = e=>{
   files = e.target.files;
   preview.innerHTML = "";
 
@@ -70,7 +111,7 @@ function getShift(){
 }
 
 async function submitData(){
-  if(files.length === 0) return alert("Foto wajib!");
+  if(files.length===0) return alert("Foto wajib!");
 
   try{
     let urls = [];
@@ -78,11 +119,8 @@ async function submitData(){
     for(let file of files){
       const fileName = Date.now()+"_"+file.name;
 
-      const { error } = await supabase.storage
-        .from('handover')
+      await supabase.storage.from('handover')
         .upload(fileName, file);
-
-      if(error) throw error;
 
       const { data } = supabase.storage
         .from('handover')
@@ -91,21 +129,17 @@ async function submitData(){
       urls.push(data.publicUrl);
     }
 
-    const { error } = await supabase
-      .from('handover_data')
-      .insert([{
-        timestamp: new Date(),
-        shift: getShift(),
-        pengirim: document.getElementById('pengirim').value,
-        penerima: document.getElementById('penerima').value,
-        nama_pasien: document.getElementById('namaPasien').value,
-        urn_pasien: document.getElementById('urnPasien').value,
-        lantai: document.getElementById('lantai').value,
-        nama_obat: document.getElementById('namaObat').value,
-        foto_url: urls.join(",")
-      }]);
-
-    if(error) throw error;
+    await supabase.from('handover_data').insert([{
+      timestamp: new Date(),
+      shift: getShift(),
+      pengirim: pengirim.value,
+      penerima: penerima.value,
+      nama_pasien: namaPasien.value,
+      urn_pasien: urnPasien.value,
+      lantai: lantai.value,
+      nama_obat: namaObat.value,
+      foto_url: urls.join(",")
+    }]);
 
     alert("✅ Data berhasil dikirim!");
     location.reload();
