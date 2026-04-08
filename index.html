@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Form Serah Terima</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+body{font-family:sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);padding:20px;}
+.container{background:white;padding:20px;border-radius:15px;max-width:500px;margin:auto;}
+input,textarea,select{width:100%;margin:10px 0;padding:10px;border-radius:8px;border:1px solid #ccc;}
+button{width:100%;padding:15px;background:#667eea;color:white;border:none;border-radius:10px;font-weight:bold;}
+img{width:100px;margin:5px;border-radius:8px;}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h2>📋 Form Serah Terima</h2>
+
+<input id="pengirim" placeholder="Nama Pengirim" required>
+<input id="penerima" placeholder="Nama Penerima" required>
+
+<input id="namaPasien" placeholder="Nama Pasien" required>
+<input id="urnPasien" placeholder="URN Pasien" required>
+
+<select id="lantai">
+<option value="">Pilih Lantai</option>
+<option>ICU</option>
+<option>HCU</option>
+<option>Ward</option>
+</select>
+
+<textarea id="namaObat" placeholder="Nama Obat"></textarea>
+
+<input type="file" id="photoInput" multiple accept="image/*">
+<div id="preview"></div>
+
+<button onclick="submitData()">Kirim Data</button>
+</div>
+
+<script>
+const supabase = window.supabase.createClient(
+  'https://YOUR_URL.supabase.co',
+  'YOUR_ANON_KEY'
+);
+
+let files = [];
+
+document.getElementById('photoInput').onchange = e=>{
+  files = e.target.files;
+  preview.innerHTML = "";
+
+  [...files].forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      preview.innerHTML += `<img src="${e.target.result}">`;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+function getShift(){
+  const h = new Date().getHours();
+  if(h<14) return "pagi";
+  if(h<21) return "siang";
+  return "malam";
+}
+
+async function submitData(){
+  if(files.length === 0) return alert("Foto wajib!");
+
+  try{
+    let urls = [];
+
+    for(let file of files){
+      const fileName = Date.now()+"_"+file.name;
+
+      const { error } = await supabase.storage
+        .from('handover')
+        .upload(fileName, file);
+
+      if(error) throw error;
+
+      const { data } = supabase.storage
+        .from('handover')
+        .getPublicUrl(fileName);
+
+      urls.push(data.publicUrl);
+    }
+
+    const { error } = await supabase
+      .from('handover_data')
+      .insert([{
+        timestamp: new Date(),
+        shift: getShift(),
+        pengirim: document.getElementById('pengirim').value,
+        penerima: document.getElementById('penerima').value,
+        nama_pasien: document.getElementById('namaPasien').value,
+        urn_pasien: document.getElementById('urnPasien').value,
+        lantai: document.getElementById('lantai').value,
+        nama_obat: document.getElementById('namaObat').value,
+        foto_url: urls.join(",")
+      }]);
+
+    if(error) throw error;
+
+    alert("✅ Data berhasil dikirim!");
+    location.reload();
+
+  }catch(err){
+    alert("❌ Error: " + err.message);
+  }
+}
+</script>
+
+</body>
+</html>
