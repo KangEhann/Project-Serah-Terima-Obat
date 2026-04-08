@@ -147,7 +147,9 @@
   <div class="stats-grid">
     <div class="stat-card purple"><div class="stat-label">Total Catatan</div><div class="stat-num" id="statTotal">—</div><div class="stat-sub">semua shift</div></div>
     <div class="stat-card cyan"><div class="stat-label">Pasien</div><div class="stat-num" id="statPasien">—</div><div class="stat-sub">Data</div></div>
-    <div class="stat-card rose"><div class="stat-label">Shift Pagi</div><div class="stat-num" id="statPagi">—</div><div class="stat-sub">07:00 – 14:00</div></div>
+    <div class="stat-card rose"><div class="stat-label">Shift Pagi</div><div class="stat-num" id="statPagi">—</div><div class="stat-
+    <div class="stat-card cyan"><div class="stat-label">Shift Siang</div><div class="stat-num" id="statSiang">—</div><div class="stat-sub">14:00 – 21:00</div></div>
+    sub">07:00 – 14:00</div></div>
     <div class="stat-card green"><div class="stat-label">Shift Malam</div><div class="stat-num" id="statMalam">—</div><div class="stat-sub">21:00 – 07:00</div></div>
   </div>
 
@@ -314,6 +316,7 @@ function updateStats(data) {
   document.getElementById('statTotal').textContent = data.length;
   document.getElementById('statPasien').textContent = new Set(data.map(d=>d.urn_pasien)).size;
   document.getElementById('statPagi').textContent = data.filter(d=>d.shift==='pagi').length;
+  document.getElementById('statSiang').textContent = data.filter(d=>d.shift==='siang').length;
   document.getElementById('statMalam').textContent = data.filter(d=>d.shift==='malam').length;
 }
 
