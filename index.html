@@ -3,150 +3,479 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Form Serah Terima</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
+<title>HandOver App 💊</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{
-  font-family:'Segoe UI';
-  background:linear-gradient(135deg,#1e1e2f,#2c2c54);
-  color:white;
-  padding:20px;
-}
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --card: #16161f;
+    --border: #2a2a3a;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --accent3: #f43f5e;
+    --text: #f0f0ff;
+    --muted: #8888aa;
+    --success: #10b981;
+    --radius: 16px;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'Space Grotesk', sans-serif;
+  }
 
-.container{
-  background:#2a2a40;
-  padding:20px;
-  border-radius:12px;
-  max-width:500px;
-  margin:auto;
-  box-shadow:0 0 20px rgba(0,0,0,0.4);
-}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-input,select,textarea{
-  width:100%;
-  padding:10px;
-  margin:10px 0;
-  border:none;
-  border-radius:8px;
-  background:#1e1e2f;
-  color:white;
-}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
 
-button{
-  width:100%;
-  padding:12px;
-  background:#5c6bc0;
-  border:none;
-  border-radius:8px;
-  color:white;
-  font-weight:bold;
-}
+  .noise {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    background-size: 200px;
+  }
 
-img{width:80px;margin:5px;border-radius:6px;}
+  .blob {
+    position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.12; pointer-events: none; z-index: 0;
+  }
+  .blob1 { width: 400px; height: 400px; background: var(--accent); top: -100px; right: -100px; }
+  .blob2 { width: 300px; height: 300px; background: var(--accent2); bottom: 100px; left: -80px; }
+
+  .container { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+  header {
+    padding: 32px 16px 24px;
+    text-align: center;
+    position: relative; z-index: 1;
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3);
+    color: #a78bfa; font-size: 12px; font-weight: 500;
+    padding: 4px 12px; border-radius: 100px; margin-bottom: 12px;
+  }
+
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #a78bfa; animation: pulse 2s infinite; }
+
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+  h1 {
+    font-family: var(--font-head);
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #c4b5fd 0%, #67e8f9 50%, #f9a8d4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  .subtitle { color: var(--muted); font-size: 14px; }
+
+  .shift-bar {
+    margin: 0 16px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; z-index: 1;
+  }
+
+  .shift-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .shift-badge {
+    font-family: var(--font-head);
+    font-size: 15px; font-weight: 700;
+    padding: 4px 14px; border-radius: 100px;
+  }
+  .shift-pagi { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+  .shift-siang { background: rgba(6,182,212,0.15); color: #22d3ee; border: 1px solid rgba(6,182,212,0.3); }
+  .shift-malam { background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+
+  .time-display { font-size: 13px; color: var(--muted); }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 14px;
+    position: relative; z-index: 1;
+    transition: border-color 0.2s;
+  }
+  .card:focus-within { border-color: rgba(124,58,237,0.5); }
+
+  .section-title {
+    font-family: var(--font-head);
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--muted); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  .double-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  label { font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0.04em; }
+
+  input, select, textarea {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 11px 14px;
+    width: 100%;
+    transition: border-color 0.2s, background 0.2s;
+    outline: none;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    background: rgba(124,58,237,0.08);
+  }
+  input::placeholder { color: var(--muted); }
+  select option { background: #1a1a2e; }
+
+  .photo-section { position: relative; z-index: 1; }
+
+  .photo-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+
+  .camera-choice {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
+  }
+
+  .cam-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 12px;
+    cursor: pointer; transition: all 0.2s; color: var(--text);
+    font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  }
+  .cam-btn:hover { border-color: var(--accent); background: rgba(124,58,237,0.08); }
+  .cam-btn.active { border-color: var(--accent); background: rgba(124,58,237,0.15); color: #a78bfa; }
+  .cam-btn svg { width: 28px; height: 28px; }
+
+  .preview-wrap {
+    display: none;
+    position: relative; border-radius: 12px; overflow: hidden;
+    aspect-ratio: 4/3; background: #000;
+    margin-top: 12px;
+  }
+  .preview-wrap.show { display: block; }
+
+  #previewImage {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    border-radius: 12px;
+  }
+
+  .remove-photo {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,0.7); border: none; border-radius: 50%;
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #fff; font-size: 14px;
+  }
+
+  input[type="file"] { display: none; }
+
+  .submit-btn {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, var(--accent) 0%, #9333ea 100%);
+    color: white; border: none; border-radius: var(--radius);
+    font-family: var(--font-head); font-size: 16px; font-weight: 700;
+    cursor: pointer; position: relative; z-index: 1;
+    transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.02em;
+    margin-top: 8px;
+  }
+  .submit-btn:hover { opacity: 0.9; }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--success); color: white;
+    padding: 12px 24px; border-radius: 100px;
+    font-size: 14px; font-weight: 500;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 100; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--accent3); }
+
+  .progress-bar {
+    display: none; width: 100%; height: 3px;
+    background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden;
+  }
+  .progress-bar.show { display: block; }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
 </style>
 </head>
-
 <body>
+<div class="noise"></div>
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+
+<header>
+  <div class="badge"><span class="badge-dot"></span> Serah Terima Obat Aktif</div>
+  <h1>HandOver App</h1>
+  <p class="subtitle">Dokumentasi serah terima obat real-time</p>
+</header>
 
 <div class="container">
-<h2>📋 Form Serah Terima</h2>
 
-<input id="pengirim" placeholder="Nama Pengirim">
-<input id="penerima" placeholder="Nama Penerima">
+  <!-- Shift Bar -->
+  <div class="shift-bar">
+    <div>
+      <div class="shift-label">Shift Sekarang</div>
+      <div id="shiftBadge" class="shift-badge" style="margin-top:4px">—</div>
+    </div>
+    <div class="time-display" id="clockDisplay">—</div>
+  </div>
 
-<input id="namaPasien" placeholder="Nama Pasien">
-<input id="urnPasien" placeholder="URN Pasien">
+  <!-- Identitas -->
+  <div class="card">
+    <div class="section-title">Identitas Petugas</div>
+    <div class="double-col">
+      <div class="field">
+        <label>Nama Pengirim</label>
+        <input type="text" id="namaPengirim" placeholder="Nama Petugas Farmasi" required>
+      </div>
+      <div class="field">
+        <label>Nama Penerima</label>
+        <input type="text" id="namaPenerima" placeholder="Nama Perawat" required>
+      </div>
+    </div>
+  </div>
 
-<select id="lantai">
-<option value="">Pilih Lantai</option>
+  <!-- Pasien -->
+  <div class="card">
+    <div class="section-title">Data Pasien</div>
+    <div class="field" style="margin-bottom:12px">
+      <label>Nama Pasien</label>
+      <input type="text" id="namaPasien" placeholder="Nama lengkap pasien" required>
+    </div>
+    <div class="double-col">
+      <div class="field">
+        <label>URN / No RM</label>
+        <input type="text" id="urnPasien" placeholder="12345678" required>
+      </div>
+      <div class="field">
+        <label>Lantai / Ruang</label>
+        <select id="lantai">
+          <option value="">Pilih lantai</option>
+         <option>9 General Ward</option>
+<option>9 Obstetry Ward</option>
+<option>9 General C</option>
+<option>10 Pediatric Ward</option>
+<option>11 BMT</option>
+<option>11 General Ward</option>
+<option>12 Paliatif Ward</option>
+<option>16 General Ward</option>
+<option>19 Wing A</option>
+<option>19 Wing B</option>
+<option>20 Wing A</option>
+<option>20 Wing B</option>
+<option>22 Wing A</option>
+<option>22 Wing B</option>
 <option>ICU</option>
 <option>HCU</option>
-<option>Ward</option>
-</select>
+        </select>
+      </div>
+    </div>
+  </div>
 
-<textarea id="namaObat" placeholder="Nama Obat"></textarea>
+  <!-- Obat -->
+  <div class="card">
+    <div class="section-title">Detail Obat</div>
+    <div class="field">
+      <label>Nama Obat / Keterangan</label>
+      <input type="text" id="namaObat" placeholder="Nama obat, dosis, rute..." required>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label>Catatan Tambahan</label>
+      <textarea id="catatan" rows="2" placeholder="Instruksi khusus, peringatan..."></textarea>
+    </div>
+  </div>
 
-<input type="file" id="photoInput" multiple>
-<div id="preview"></div>
+  <!-- Foto -->
+  <div class="photo-card">
+    <div class="section-title">Foto Bukti</div>
+    <div class="camera-choice">
+      <button type="button" class="cam-btn" id="btnCamera" onclick="openCamera()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Kamera
+      </button>
+      <button type="button" class="cam-btn" id="btnGallery" onclick="openGallery()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Galeri
+      </button>
+    </div>
+    <input type="file" id="photoCamera" accept="image/*" capture="environment">
+    <input type="file" id="photoGallery" accept="image/*">
+    <div class="preview-wrap" id="previewContainer">
+      <img id="previewImage" src="" alt="preview">
+      <button type="button" class="remove-photo" onclick="removePhoto()">✕</button>
+    </div>
+    <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
 
-<button onclick="submitData()">Kirim Data</button>
+  <button class="submit-btn" id="submitBtn" onclick="submitForm()">Kirim Serah Terima ✦</button>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-const supabase = window.supabase.createClient(
-  'https://wgxtnhgjrkgigyqhnlwy.supabase.co',
-  'sb_publishable_xxxxx'
-);
+const SUPABASE_URL = 'https://YOUR_URL.supabase.co';
+const SUPABASE_KEY = 'YOUR_ANON_KEY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let files = [];
+let photoFile = null;
 
-photoInput.onchange = e=>{
-  files = e.target.files;
-  preview.innerHTML="";
-  [...files].forEach(file=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
-      preview.innerHTML+=`<img src="${e.target.result}">`;
-    };
-    reader.readAsDataURL(file);
-  });
-};
-
-function getShift(){
-  let h=new Date().getHours();
-  if(h<14)return"pagi";
-  if(h<21)return"siang";
-  return"malam";
+function getShift() {
+  const h = new Date().getHours();
+  if (h >= 7 && h < 14) return 'pagi';
+  if (h >= 14 && h < 21) return 'siang';
+  return 'malam';
 }
 
-async function submitData(){
-  try{
-    if(files.length===0) return alert("Upload foto dulu!");
+function updateClock() {
+  const now = new Date();
+  const shift = getShift();
+  const badge = document.getElementById('shiftBadge');
+  badge.textContent = shift.charAt(0).toUpperCase() + shift.slice(1);
+  badge.className = 'shift-badge shift-' + shift;
+  document.getElementById('clockDisplay').textContent =
+    now.toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
+}
+updateClock(); setInterval(updateClock, 10000);
 
-    let urls=[];
+function handleFile(file) {
+  if (!file) return;
+  photoFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('previewImage').src = e.target.result;
+    document.getElementById('previewContainer').className = 'preview-wrap show';
+  };
+  reader.readAsDataURL(file);
+}
 
-    for(let file of files){
-      let name=Date.now()+"_"+file.name;
+function openCamera() {
+  document.getElementById('photoCamera').click();
+  document.getElementById('btnCamera').classList.add('active');
+  document.getElementById('btnGallery').classList.remove('active');
+}
+function openGallery() {
+  document.getElementById('photoGallery').click();
+  document.getElementById('btnGallery').classList.add('active');
+  document.getElementById('btnCamera').classList.remove('active');
+}
+function removePhoto() {
+  photoFile = null;
+  document.getElementById('previewContainer').className = 'preview-wrap';
+  document.getElementById('photoCamera').value = '';
+  document.getElementById('photoGallery').value = '';
+  document.getElementById('btnCamera').classList.remove('active');
+  document.getElementById('btnGallery').classList.remove('active');
+}
 
-      let {error}=await supabase.storage
-      .from('handover')
-      .upload(name,file);
+document.getElementById('photoCamera').addEventListener('change', e => handleFile(e.target.files[0]));
+document.getElementById('photoGallery').addEventListener('change', e => handleFile(e.target.files[0]));
 
-      if(error) throw error;
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '') + ' show';
+  setTimeout(() => t.className = 'toast' + (isError?' error':''), 3000);
+}
 
-      let {data}=supabase.storage
-      .from('handover')
-      .getPublicUrl(name);
+function setProgress(pct) {
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  if (pct === 0) { bar.className='progress-bar'; return; }
+  bar.className = 'progress-bar show';
+  fill.style.width = pct + '%';
+}
 
-      urls.push(data.publicUrl);
-    }
+async function submitForm() {
+  const pengirim = document.getElementById('namaPengirim').value.trim();
+  const penerima = document.getElementById('namaPenerima').value.trim();
+  const pasien = document.getElementById('namaPasien').value.trim();
+  const urn = document.getElementById('urnPasien').value.trim();
+  const lantai = document.getElementById('lantai').value;
+  const obat = document.getElementById('namaObat').value.trim();
+  const catatan = document.getElementById('catatan').value.trim();
 
-    let {error}=await supabase
-    .from('handover_data')
-    .insert([{
-      timestamp:new Date(),
-      shift:getShift(),
-      pengirim:pengirim.value,
-      penerima:penerima.value,
-      nama_pasien:namaPasien.value,
-      urn_pasien:urnPasien.value,
-      lantai:lantai.value,
-      nama_obat:namaObat.value,
-      foto_url:urls.join(",")
+  if (!pengirim||!penerima||!pasien||!urn||!lantai||!obat) {
+    showToast('Lengkapi semua field dulu ya!', true); return;
+  }
+  if (!photoFile) { showToast('Foto wajib dilampirkan!', true); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Uploading...';
+  setProgress(20);
+
+  try {
+    const ext = photoFile.name.split('.').pop();
+    const fileName = Date.now() + '_' + Math.random().toString(36).slice(2) + '.' + ext;
+
+    const { error: upErr } = await sb.storage.from('handover').upload(fileName, photoFile, {
+      cacheControl: '31536000',
+      upsert: false
+    });
+    if (upErr) throw upErr;
+    setProgress(60);
+
+    const { data: urlData } = sb.storage.from('handover').getPublicUrl(fileName);
+    setProgress(80);
+
+    const { error: dbErr } = await sb.from('handover_data').insert([{
+      timestamp: new Date().toISOString(),
+      shift: getShift(),
+      nama_pengirim: pengirim,
+      nama_penerima: penerima,
+      nama_pasien: pasien,
+      urn_pasien: urn,
+      lantai: lantai,
+      nama_obat: obat,
+      catatan: catatan,
+      foto_url: urlData.publicUrl,
+      foto_path: fileName
     }]);
+    if (dbErr) throw dbErr;
 
-    if(error) throw error;
-
-    alert("Berhasil!");
-    location.reload();
-
-  }catch(err){
-    alert("ERROR: "+err.message);
+    setProgress(100);
+    setTimeout(() => { setProgress(0); location.reload(); }, 800);
+    showToast('Serah terima berhasil dicatat!');
+  } catch(err) {
+    showToast('Error: ' + err.message, true);
+    btn.disabled = false; btn.textContent = 'Kirim Serah Terima ✦';
+    setProgress(0);
   }
 }
 </script>
-
 </body>
 </html>

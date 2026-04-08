@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — HandOver</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #080810;
+    --bg2: #0f0f1a;
+    --card: #13131e;
+    --card2: #1a1a28;
+    --border: #252535;
+    --border2: #32324a;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --accent3: #f43f5e;
+    --accent4: #10b981;
+    --text: #f0f0ff;
+    --muted: #7070a0;
+    --radius: 14px;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'Space Grotesk', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; display: flex; }
+  .sidebar { width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; gap: 8px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .logo { font-family: var(--font-head); font-size: 20px; font-weight: 800; background: linear-gradient(135deg, #c4b5fd, #67e8f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 24px; padding: 0 8px; }
+  .logo span { font-size: 11px; display: block; -webkit-text-fill-color: var(--muted); background: none; font-weight: 400; margin-top: 2px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; }
+  .nav-item:hover { background: var(--card2); color: var(--text); }
+  .nav-item.active { background: rgba(124,58,237,0.15); color: #a78bfa; }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-footer { margin-top: auto; font-size: 11px; color: var(--muted); padding: 8px; line-height: 1.6; }
+  .main { flex: 1; padding: 28px 28px 60px; overflow-x: hidden; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+  .page-title { font-family: var(--font-head); font-size: 22px; font-weight: 800; }
+  .page-sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .topbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 10px; font-family: var(--font-body); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); transition: all 0.15s; }
+  .btn-ghost { background: var(--card); color: var(--text); }
+  .btn-ghost:hover { background: var(--card2); border-color: var(--accent); }
+  .btn-success { background: rgba(16,185,129,0.12); color: var(--accent4); border-color: rgba(16,185,129,0.3); }
+  .btn-success:hover { background: rgba(16,185,129,0.2); }
+  .btn svg { width: 15px; height: 15px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+  .stat-card:hover { border-color: var(--border2); }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .stat-card.purple::before { background: linear-gradient(90deg, var(--accent), #9333ea); }
+  .stat-card.cyan::before { background: linear-gradient(90deg, var(--accent2), #0ea5e9); }
+  .stat-card.rose::before { background: linear-gradient(90deg, var(--accent3), #fb7185); }
+  .stat-card.green::before { background: linear-gradient(90deg, var(--accent4), #34d399); }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .stat-num { font-family: var(--font-head); font-size: 28px; font-weight: 800; line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .filter-bar { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .filter-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+  .filter-input { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 13px; padding: 8px 12px; outline: none; transition: border-color 0.2s; }
+  .filter-input:focus { border-color: var(--accent); }
+  .shift-tabs { display: flex; gap: 6px; }
+  .shift-tab { padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--bg2); color: var(--muted); transition: all 0.15s; font-family: var(--font-body); }
+  .shift-tab:hover { border-color: var(--border2); color: var(--text); }
+  .shift-tab.active-all { border-color: rgba(124,58,237,0.4); background: rgba(124,58,237,0.1); color: #a78bfa; }
+  .shift-tab.active-pagi { border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.1); color: #fbbf24; }
+  .shift-tab.active-siang { border-color: rgba(6,182,212,0.4); background: rgba(6,182,212,0.1); color: #22d3ee; }
+  .shift-tab.active-malam { border-color: rgba(167,139,250,0.4); background: rgba(167,139,250,0.1); color: #c4b5fd; }
+  .filter-spacer { flex: 1; }
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .table-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .table-title { font-size: 13px; font-weight: 500; }
+  .record-count { font-size: 12px; color: var(--muted); }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 950px; }
+  thead th { padding: 12px 16px; text-align: left; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; background: var(--bg2); white-space: nowrap; }
+  thead th:hover { color: var(--text); }
+  thead th.sort-asc::after { content: ' ↑'; }
+  thead th.sort-desc::after { content: ' ↓'; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--card2); }
+  td { padding: 12px 16px; vertical-align: middle; }
+  .td-num { color: var(--muted); font-size: 11px; width: 32px; }
+  .photo-thumb { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s; display: block; }
+  .photo-thumb:hover { transform: scale(1.1); }
+  .shift-pill { display: inline-flex; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 500; }
+  .pill-pagi { background: rgba(251,191,36,0.12); color: #fbbf24; }
+  .pill-siang { background: rgba(6,182,212,0.12); color: #22d3ee; }
+  .pill-malam { background: rgba(167,139,250,0.12); color: #c4b5fd; }
+  .td-pasien strong { display: block; font-weight: 500; }
+  .td-pasien span { font-size: 11px; color: var(--muted); }
+  .pengirim { font-weight: 500; font-size: 13px; }
+  .penerima { font-size: 11px; color: var(--muted); }
+  .arrow { color: var(--accent2); margin: 0 3px; }
+  .lightbox { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; padding: 20px; }
+  .lightbox.show { display: flex; flex-direction: column; gap: 12px; }
+  .lightbox img { max-width: 90vw; max-height: 80vh; border-radius: 12px; object-fit: contain; }
+  .lightbox-close { position: fixed; top: 20px; right: 24px; font-size: 20px; cursor: pointer; color: white; background: rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; font-family: var(--font-body); }
+  .lightbox-info { background: rgba(255,255,255,0.08); padding: 8px 20px; border-radius: 100px; font-size: 13px; color: white; }
+  .loading-wrap { padding: 60px 20px; text-align: center; color: var(--muted); font-size: 13px; }
+  .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .empty-state { padding: 60px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--card2); border: 1px solid var(--border2); color: var(--text); padding: 12px 20px; border-radius: 12px; font-size: 13px; transform: translateY(100px); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index: 500; }
+  .toast.show { transform: translateY(0); }
+  @media (max-width: 900px) { .sidebar { display: none; } .stats-grid { grid-template-columns: repeat(2,1fr); } }
+  select option { background: #1a1a2e; }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">HandOver <span>Admin Dashboard</span></div>
+  <button class="nav-item active">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    Laporan
+  </button>
+  <button class="nav-item" onclick="window.open('index.html','_blank')">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Form Input
+  </button>
+  <div class="sidebar-footer" id="lastUpdate">Belum diupdate</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title">Laporan Serah Terima</div>
+      <div class="page-sub" id="dateRangeLabel">Memuat data...</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="loadData()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Refresh
+      </button>
+      <button class="btn btn-success" onclick="exportExcel()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Export Excel
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card purple"><div class="stat-label">Total Catatan</div><div class="stat-num" id="statTotal">—</div><div class="stat-sub">semua shift</div></div>
+    <div class="stat-card cyan"><div class="stat-label">Pasien Unik</div><div class="stat-num" id="statPasien">—</div><div class="stat-sub">berdasarkan URN</div></div>
+    <div class="stat-card rose"><div class="stat-label">Shift Pagi</div><div class="stat-num" id="statPagi">—</div><div class="stat-sub">07:00 – 14:00</div></div>
+    <div class="stat-card green"><div class="stat-label">Shift Malam</div><div class="stat-num" id="statMalam">—</div><div class="stat-sub">21:00 – 07:00</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Filter</span>
+    <input type="date" class="filter-input" id="filterDateFrom" onchange="loadData()">
+    <span style="color:var(--muted);font-size:12px">s/d</span>
+    <input type="date" class="filter-input" id="filterDateTo" onchange="loadData()">
+    <input type="text" class="filter-input" id="filterSearch" placeholder="Cari pasien / URN / obat..." style="width:200px" oninput="filterLocal()">
+    <div class="shift-tabs">
+      <button class="shift-tab active-all" onclick="setShift('')" id="tab-all">Semua</button>
+      <button class="shift-tab" onclick="setShift('pagi')" id="tab-pagi">Pagi</button>
+      <button class="shift-tab" onclick="setShift('siang')" id="tab-siang">Siang</button>
+      <button class="shift-tab" onclick="setShift('malam')" id="tab-malam">Malam</button>
+    </div>
+    <div class="filter-spacer"></div>
+    <button class="btn btn-ghost" onclick="clearFilters()" style="font-size:12px;padding:8px 12px;">Reset</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header">
+      <span class="table-title">Riwayat Serah Terima</span>
+      <span class="record-count" id="countLabel">—</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="td-num">#</th>
+            <th onclick="sortTable(this,'timestamp')">Waktu</th>
+            <th onclick="sortTable(this,'shift')">Shift</th>
+            <th onclick="sortTable(this,'nama_pasien')">Pasien</th>
+            <th>Petugas</th>
+            <th onclick="sortTable(this,'lantai')">Lantai</th>
+            <th onclick="sortTable(this,'nama_obat')">Nama Obat</th>
+            <th>Catatan</th>
+            <th>Foto</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="9"><div class="loading-wrap"><div class="spinner"></div>Memuat data...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close">✕</button>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-info" id="lightboxInfo"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://YOUR_URL.supabase.co';
+const SUPABASE_KEY = 'YOUR_ANON_KEY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let allData = [], filteredData = [], currentShift = '';
+let sortCol = 'timestamp', sortDir = 'desc';
+
+(function() {
+  const today = new Date();
+  const from = new Date(); from.setDate(from.getDate() - 30);
+  document.getElementById('filterDateTo').value = today.toISOString().slice(0,10);
+  document.getElementById('filterDateFrom').value = from.toISOString().slice(0,10);
+})();
+
+async function loadData() {
+  showLoading();
+  const from = document.getElementById('filterDateFrom').value;
+  const to = document.getElementById('filterDateTo').value;
+  let q = sb.from('handover_data').select('*');
+  if (from) q = q.gte('timestamp', from + 'T00:00:00');
+  if (to) q = q.lte('timestamp', to + 'T23:59:59');
+  if (currentShift) q = q.eq('shift', currentShift);
+  q = q.order('timestamp', { ascending: false });
+  const { data, error } = await q;
+  if (error) { showToast('Error: ' + error.message); showEmpty(); return; }
+  allData = data || [];
+  document.getElementById('lastUpdate').textContent = 'Update: ' + new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  updateDateLabel();
+  filterLocal();
+  updateStats(allData);
+}
+
+function updateDateLabel() {
+  const f = document.getElementById('filterDateFrom').value;
+  const t = document.getElementById('filterDateTo').value;
+  document.getElementById('dateRangeLabel').textContent =
+    f && t ? fmtDate(f) + ' — ' + fmtDate(t) : 'Semua waktu';
+}
+
+function fmtDate(d) {
+  return new Date(d+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function filterLocal() {
+  const q = (document.getElementById('filterSearch').value||'').toLowerCase();
+  filteredData = q ? allData.filter(r =>
+    (r.nama_pasien||'').toLowerCase().includes(q) ||
+    (r.urn_pasien||'').toLowerCase().includes(q) ||
+    (r.nama_obat||'').toLowerCase().includes(q) ||
+    (r.nama_pengirim||'').toLowerCase().includes(q) ||
+    (r.nama_penerima||'').toLowerCase().includes(q)
+  ) : [...allData];
+  sortData(); renderTable();
+}
+
+function sortData() {
+  filteredData.sort((a,b) => {
+    const va = a[sortCol]||'', vb = b[sortCol]||'';
+    return sortDir==='asc' ? (va>vb?1:-1) : (va<vb?1:-1);
+  });
+}
+
+let lastSortEl = null;
+function sortTable(el, col) {
+  if (sortCol===col) sortDir = sortDir==='asc'?'desc':'asc';
+  else { sortCol=col; sortDir='desc'; }
+  document.querySelectorAll('thead th').forEach(th=>th.classList.remove('sort-asc','sort-desc'));
+  el.classList.add('sort-'+sortDir);
+  sortData(); renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('countLabel').textContent = filteredData.length + ' catatan';
+  if (!filteredData.length) { showEmpty(); return; }
+  tbody.innerHTML = filteredData.map((r,i) => `
+    <tr>
+      <td class="td-num">${i+1}</td>
+      <td style="white-space:nowrap;font-size:12px">
+        ${new Date(r.timestamp).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'2-digit'})}<br>
+        <span style="color:var(--muted)">${new Date(r.timestamp).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</span>
+      </td>
+      <td><span class="shift-pill pill-${r.shift||'malam'}">${r.shift||'—'}</span></td>
+      <td class="td-pasien">
+        <strong>${esc(r.nama_pasien)}</strong>
+        <span>${esc(r.urn_pasien)}</span>
+      </td>
+      <td>
+        <div class="pengirim">${esc(r.nama_pengirim||'—')}</div>
+        <div class="penerima"><span class="arrow">→</span>${esc(r.nama_penerima||'—')}</div>
+      </td>
+      <td style="font-size:12px;color:var(--muted);white-space:nowrap">${esc(r.lantai||'—')}</td>
+      <td style="max-width:160px;font-size:13px">${esc(r.nama_obat||'—')}</td>
+      <td style="max-width:130px;font-size:12px;color:var(--muted)">${esc(r.catatan||'—')}</td>
+      <td>${r.foto_url
+        ? `<img class="photo-thumb" src="${esc(r.foto_url)}" loading="lazy"
+             onclick="openLightbox('${esc(r.foto_url)}','${esc(r.nama_pasien)} · ${esc(r.nama_obat)}')">`
+        : '<span style="color:var(--muted);font-size:12px">—</span>'}</td>
+    </tr>`).join('');
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function showLoading() { document.getElementById('tableBody').innerHTML='<tr><td colspan="9"><div class="loading-wrap"><div class="spinner"></div>Memuat data...</div></td></tr>'; }
+function showEmpty() { document.getElementById('tableBody').innerHTML='<tr><td colspan="9"><div class="empty-state">Tidak ada data ditemukan</div></td></tr>'; }
+
+function updateStats(data) {
+  document.getElementById('statTotal').textContent = data.length;
+  document.getElementById('statPasien').textContent = new Set(data.map(d=>d.urn_pasien)).size;
+  document.getElementById('statPagi').textContent = data.filter(d=>d.shift==='pagi').length;
+  document.getElementById('statMalam').textContent = data.filter(d=>d.shift==='malam').length;
+}
+
+function setShift(val) {
+  currentShift = val;
+  ['all','pagi','siang','malam'].forEach(s => {
+    const el = document.getElementById('tab-'+s);
+    const key = s==='all' ? '' : s;
+    el.className = 'shift-tab' + (currentShift===key ? ' active-'+s : '');
+  });
+  loadData();
+}
+
+function clearFilters() {
+  const today = new Date(), from = new Date(); from.setDate(from.getDate()-30);
+  document.getElementById('filterDateFrom').value = from.toISOString().slice(0,10);
+  document.getElementById('filterDateTo').value = today.toISOString().slice(0,10);
+  document.getElementById('filterSearch').value = '';
+  setShift('');
+}
+
+function openLightbox(url, label) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightboxInfo').textContent = label;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
+
+async function exportExcel() {
+  if (!filteredData.length) { showToast('Tidak ada data'); return; }
+  showToast('Menyiapkan Excel...');
+  const wb = XLSX.utils.book_new();
+  const rows = filteredData.map((r,i) => ({
+    'No': i+1,
+    'Waktu': new Date(r.timestamp).toLocaleString('id-ID'),
+    'Shift': r.shift,
+    'Nama Pasien': r.nama_pasien,
+    'URN / No RM': r.urn_pasien,
+    'Lantai / Ruang': r.lantai,
+    'Nama Pengirim': r.nama_pengirim||'-',
+    'Nama Penerima': r.nama_penerima||'-',
+    'Nama Obat': r.nama_obat,
+    'Catatan': r.catatan||'-',
+    'Link Foto': r.foto_url||'-'
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{wch:4},{wch:20},{wch:8},{wch:22},{wch:14},{wch:14},{wch:20},{wch:20},{wch:28},{wch:30},{wch:65}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Data Handover');
+  const ws2 = XLSX.utils.aoa_to_sheet([
+    ['LAPORAN SERAH TERIMA OBAT'],['Dicetak:', new Date().toLocaleString('id-ID')],[''],
+    ['Total Catatan', filteredData.length],
+    ['Pasien Unik', new Set(filteredData.map(d=>d.urn_pasien)).size],
+    ['Shift Pagi', filteredData.filter(d=>d.shift==='pagi').length],
+    ['Shift Siang', filteredData.filter(d=>d.shift==='siang').length],
+    ['Shift Malam', filteredData.filter(d=>d.shift==='malam').length],
+  ]);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Ringkasan');
+  const from = document.getElementById('filterDateFrom').value;
+  const to = document.getElementById('filterDateTo').value;
+  XLSX.writeFile(wb, `handover_${from}_${to}_${currentShift||'semua'}.xlsx`);
+  showToast('Excel berhasil didownload!');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+loadData();
+</script>
+</body>
+</html>
