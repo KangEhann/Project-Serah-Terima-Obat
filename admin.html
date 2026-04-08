@@ -204,9 +204,11 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://YOUR_URL.supabase.co';
-const SUPABASE_KEY = 'YOUR_ANON_KEY';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = 'https://wgxtnhgjrkgigyqhnlwy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_n0kPR_vBbvXqRP70WcwpKw__8rX6tq7';
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 
 let allData = [], filteredData = [], currentShift = '';
 let sortCol = 'timestamp', sortDir = 'desc';
@@ -222,7 +224,7 @@ async function loadData() {
   showLoading();
   const from = document.getElementById('filterDateFrom').value;
   const to = document.getElementById('filterDateTo').value;
-  let q = sb.from('handover_data').select('*');
+  let q = supabaseClient.from('handover_data').select('*');
   if (from) q = q.gte('timestamp', from + 'T00:00:00');
   if (to) q = q.lte('timestamp', to + 'T23:59:59');
   if (currentShift) q = q.eq('shift', currentShift);
